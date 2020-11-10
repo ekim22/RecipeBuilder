@@ -1,0 +1,43 @@
+<?xml version ="1.0" encoding ="utf-8"?><!--  Learn More about how to use App Actions: https://developer.android.com/guide/actions/index.html -->
+<actions>
+    <action intentName="actions.intent.UPDATE_ITEM_LIST">
+<!--        <fulfillment urlTemplate="https://project.recipebuilder.com/start{?itemListName,itemListElementName}">-->
+<!--            <parameter-mapping urlParameter="itemListName" intentParameter="itemList.name" required="true" />-->
+<!--            <parameter-mapping urlParameter="itemListElementName" intentParameter="itemList.itemListElement.name" />-->
+<!--        </fulfillment>-->
+
+        <fulfillment urlTemplate="https://project.recipebuilder.com/start" />
+    </action>
+    <action intentName="actions.intent.OPEN_APP_FEATURE">
+        <fulfillment urlTemplate="{@url}" />
+        <parameter name="feature">
+            <entity-set-reference entitySetId="featureParamEntitySet"/>
+        </parameter>
+        <entity-set entitySetId="featureParamEntitySet">
+            <!-- Provide a URL per entity -->
+            <entity url="https://project.recipebuilder.com/start" name="recorder" />
+            <entity url="https://project.recipebuilder.com/stop" name="stop recording" />
+        </entity-set>
+    </action>
+
+    <action intentName="actions.intent.START_EXERCISE">
+        <!-- Use url from inventory match for deep link fulfillment -->
+        <fulfillment urlTemplate="{@url}" />
+
+        <!-- Provide a fallback fulfillment with no required parameters. For example, to your app search or router deeplink -->
+        <fulfillment urlTemplate="https://project.recipebuilder.com/stop" />
+
+        <!-- Define parameters with inventories here -->
+        <parameter name="exercise.name">
+            <entity-set-reference entitySetId="nameEntitySet"/>
+        </parameter>
+    </action>
+
+    <entity-set entitySetId="nameEntitySet">
+        <!-- Provide a URL per entity -->
+        <entity url="https://project.recipebuilder.com/start" name="mic recipe builder" />
+        <entity url="https://project.recipebuilder.com/start" name="recording recipe" />
+
+    </entity-set>
+
+</actions>

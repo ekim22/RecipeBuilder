@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Recipe Builder</string>
+    <string name="recipe">My Recipe</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="all_recipes">"All recipes"</string>
+
+    <!-- General steps for baking a pie -->
+    <string-array name="sample_recipe_steps">
+        <item>Heat oven to 425 degrees Fahrenheit</item>
+        <item>In large bowl, gently mix ingredients; spoon into crust-lined pie plate</item>
+        <item>Bake 40 to 45 minutes or until crust is golden brown</item>
+        <item>Cover edge of crust with 2- to 3- inch wide strips of foil after first 15 to 20 minutes</item>
+        <item>Cool on cooling rack at least 2 hours before serving</item>
+    </string-array>
+
+    <!-- General ingredients for a pie -->
+    <string-array name="sample_recipe_ingredients">
+        <item>Butter</item>
+        <item>Egg</item>
+        <item>Sugar</item>
+        <item>Cream</item>
+        <item>Flour</item>
+        <item>Pie Crust</item>
+        <item>Cinnamon</item>
+    </string-array>
+
+</resources>
