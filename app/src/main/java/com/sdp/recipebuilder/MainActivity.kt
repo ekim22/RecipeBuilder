@@ -33,7 +33,7 @@ import com.sdp.recipebuilder.util.RecipeUtil
 import java.util.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     private var TAG = MainActivity::class.qualifiedName
     private var db: FirebaseFirestore? = null
 //    private var docRef: DocumentReference = db?.collection("MyRecipes")!!.document()
@@ -324,13 +324,6 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.action_signout -> {
                 AuthUI.getInstance().signOut(this)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                startLoginActivity()
-                            } else {
-                                Log.e(TAG, "onOptionsItemSelected: ", task.exception)
-                            }
-                        }
             }
             R.id.action_profile -> {
                 // TODO: Tie to profile page
@@ -344,18 +337,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        FirebaseAuth.getInstance().addAuthStateListener(this)
+    }
 
-        // Start sign in if necessary
-        if (shouldStartSignIn()) {
-            startSignIn()
-            return
-        } else {
-            FirebaseAuth.getInstance().currentUser!!.getIdToken(true)
-                    .addOnSuccessListener { getTokenResult ->
-                        Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
-                    }
-        }
-
+    override fun onStop() {
+        super.onStop()
+        FirebaseAuth.getInstance().removeAuthStateListener(this)
     }
 
     private fun shouldStartSignIn(): Boolean {
@@ -383,6 +370,19 @@ class MainActivity : AppCompatActivity() {
             recipe.uid = FirebaseAuth.getInstance().currentUser!!.uid
             Log.d(TAG, "onAddRecipesClicked: " + recipe.uid)
             recipes.add(recipe)
+        }
+    }
+
+    override fun onAuthStateChanged(firebaseAuth: FirebaseAuth) {
+        // Start sign in if necessary
+        if (shouldStartSignIn()) {
+            startSignIn()
+            return
+        } else {
+            FirebaseAuth.getInstance().currentUser!!.getIdToken(true)
+                    .addOnSuccessListener { getTokenResult ->
+                        Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
+                    }
         }
     }
 
