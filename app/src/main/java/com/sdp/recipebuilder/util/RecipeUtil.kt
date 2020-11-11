@@ -1,6 +1,7 @@
 package com.sdp.recipebuilder.util
 
 import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
 import com.sdp.recipebuilder.R
 import com.sdp.recipebuilder.model.Recipe
 import java.util.*
@@ -42,9 +43,11 @@ object RecipeUtil {
         // Ingredients
         var ingredients = context.resources.getStringArray(R.array.sample_recipe_ingredients)
         ingredients = ingredients.copyOfRange(0, ingredients.size)
+        recipe.userId = FirebaseAuth.getInstance().currentUser!!.uid
         recipe.title = getRandomName(random)
         recipe.steps = getRandomSteps(steps, random)
         recipe.ingredients = getRandomIngredients(ingredients, random)
+        recipe.description = "Made by RecipeUtil"
 
         return recipe
     }

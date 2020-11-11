@@ -26,7 +26,10 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.*
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.sdp.recipebuilder.model.Recipe
 import com.sdp.recipebuilder.model.Step
 import com.sdp.recipebuilder.util.RecipeUtil
@@ -59,7 +62,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         recipeList!!.adapter = itemsAdapter
 
         // Enable Firestore logging
-        FirebaseFirestore.setLoggingEnabled(true)
+//        FirebaseFirestore.setLoggingEnabled(true)
 
         initFirestore()
 //        writeToDb()
@@ -114,7 +117,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         })
         setupMicListener(speechRecognizerIntent)
         setupListViewListener()
-        setupFireStoreListener()
         this.intent?.handleIntent()
     }
 
@@ -232,9 +234,10 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     private fun readFromDb() {
         db!!.collection("recipes")
+                .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
                 .get()
                 .addOnSuccessListener { documents ->
-                    var docs = documents.documents
+                    val docs = documents.documents
                     for (doc in docs) {
                         Log.d(TAG, "readFromDb: " + doc.data)
                     }
@@ -296,20 +299,21 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     private fun setupFireStoreListener() {
-        var docRef: DocumentReference = db?.collection("recipes")!!.document()
+        db!!.collection("recipes")
+            .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e)
+                    return@addSnapshotListener
+                }
 
-        docRef.addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                Log.w(TAG, "Listen failed.", e)
-                return@addSnapshotListener
-            }
-
-            if (snapshot != null && snapshot.exists()) {
-                Log.d(TAG, "Current data: ${snapshot.data}")
-                itemsAdapter!!.notifyDataSetChanged()
-            } else {
-                Log.d(TAG, "Current data: null")
-            }
+                if (snapshot != null) {
+                    Log.d(TAG, "Current documents: ${snapshot.documents}")
+                    Log.d(TAG, "Current documents size: ${snapshot.documents.size}")
+                    itemsAdapter!!.notifyDataSetChanged()
+                } else {
+                    Log.d(TAG, "Current data: null")
+                }
         }
 
     }
@@ -365,10 +369,8 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     private fun onAddRecipesClicked() {
         val recipes = db!!.collection("recipes")
 
-        for (x in 0..10) {
+        for (x in 0..3) {
             val recipe = RecipeUtil.getRandom(this)
-            recipe.uid = FirebaseAuth.getInstance().currentUser!!.uid
-            Log.d(TAG, "onAddRecipesClicked: " + recipe.uid)
             recipes.add(recipe)
         }
     }
@@ -383,6 +385,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                     .addOnSuccessListener { getTokenResult ->
                         Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
                     }
+            setupFireStoreListener()
         }
     }
 
