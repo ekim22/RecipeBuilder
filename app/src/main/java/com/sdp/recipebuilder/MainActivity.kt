@@ -26,10 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.*
 import com.sdp.recipebuilder.model.Recipe
 import com.sdp.recipebuilder.model.Step
 import com.sdp.recipebuilder.util.RecipeUtil
@@ -117,6 +114,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         })
         setupMicListener(speechRecognizerIntent)
         setupListViewListener()
+        setupFireStoreListener()
         this.intent?.handleIntent()
     }
 
@@ -242,7 +240,32 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                         Log.d(TAG, "readFromDb: " + doc.data)
                     }
                 }
+    }
 
+    private fun setupFireStoreListener() {
+        db!!.collection("recipes")
+                .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        Log.w(TAG, "Listen failed.", e)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        Log.d(TAG, "--------------------------------")
+                        var snapshotList = snapshot.documentChanges
+                        for (snapshot in snapshotList) {
+                            when (snapshot.type) {
+                                DocumentChange.Type.ADDED -> Log.d(TAG, "Created: " + snapshot.document.toObject(Recipe::class.java).toString())
+                                DocumentChange.Type.MODIFIED -> Log.d(TAG, "Modified: " + snapshot.document.toObject(Recipe::class.java).toString())
+                                DocumentChange.Type.REMOVED -> Log.d(TAG, "Removed: " + snapshot.document.toObject(Recipe::class.java).toString())
+                            }
+                            Log.d(TAG, "Snapshot doc: $snapshot")
+                        }
+                        itemsAdapter!!.notifyDataSetChanged()
+                    } else {
+                        Log.d(TAG, "Current data: null")
+                    }
+                }
     }
 
     private fun addStep(v: View?, step: Step) {
@@ -291,31 +314,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
 
         recipes.add(newRecipe)
-
-//        db?.collection("MyRecipes")!!.document(docRef.id)
-//                .set(newRecipe)
-//                .addOnSuccessListener { Log.d(TAG, "Step successfully written to Firestore") }
-//                .addOnFailureListener { e -> Log.w(TAG, "Error writing recipe step", e)}
-    }
-
-    private fun setupFireStoreListener() {
-        db!!.collection("recipes")
-            .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.w(TAG, "Listen failed.", e)
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    Log.d(TAG, "Current documents: ${snapshot.documents}")
-                    Log.d(TAG, "Current documents size: ${snapshot.documents.size}")
-                    itemsAdapter!!.notifyDataSetChanged()
-                } else {
-                    Log.d(TAG, "Current data: null")
-                }
-        }
-
     }
 
     // The two methods below add three-dot menu
@@ -360,12 +358,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         finish()
     }
 
-    private fun startLoginActivity() {
-        var intent = Intent(this, LoginActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
-
     private fun onAddRecipesClicked() {
         val recipes = db!!.collection("recipes")
 
@@ -385,7 +377,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                     .addOnSuccessListener { getTokenResult ->
                         Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
                     }
-            setupFireStoreListener()
         }
     }
 

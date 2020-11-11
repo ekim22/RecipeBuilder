@@ -65,7 +65,7 @@ object RecipeUtil {
     private fun getRandomSteps(array: Array<String>, random: Random): HashMap<String, String> {
         val steps = hashMapOf<String, String>()
         for (x in 0..random.nextInt(array.size)) {
-            steps.put(x.toString(), array[x])
+            steps.put(x.toString(), array[random.nextInt(array.size)])
         }
         return steps
     }
@@ -73,7 +73,7 @@ object RecipeUtil {
     private fun getRandomIngredients(array: Array<String>, random: Random): ArrayList<String> {
         val ingredients = arrayListOf<String>()
         for (x in 0..random.nextInt(array.size)) {
-            ingredients.add(array[x])
+            ingredients.add(array[random.nextInt(array.size)])
         }
         return ingredients
     }
