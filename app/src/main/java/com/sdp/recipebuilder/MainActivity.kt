@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_recipe_detail_original)
 
 //        myRecipeList = findViewById<View>(R.id.recipeRecyclerView) as RecyclerView
 

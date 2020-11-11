@@ -6,11 +6,13 @@
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
-    <string name="welcome">"Welcome !"</string>
+    <string name="welcome">Welcome!</string>
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
-    <string name="login_failed">"Login failed"</string>
-    <string name="all_recipes">"All recipes"</string>
+    <string name="login_failed">Login failed</string>
+    <string name="all_recipes">All recipes</string>
+    <string name="recipe_desc">Sandwich usually ordered at a deli; choices include type of bread (toasted or untoasted,)
+        type of meat (cold cut), type of sliced cheese, vegetable fillings (lettuce, tomato, onion, etc.), and condiments</string>
 
     <!-- General steps for baking a pie -->
     <string-array name="sample_recipe_steps">

@@ -1,66 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#E0E0E0"
     tools:context=".MainActivity">
 
-    <ListView
-        android:id="@+id/recipeSteps"
-        android:layout_width="wrap_content"
-        android:layout_height="558dp"
-        android:layout_above="@+id/btnAddStep"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="1dp"
-        android:layout_marginLeft="1dp"
-        android:layout_marginTop="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="-4dp">
-
-    </ListView>
-
-    <EditText
-        android:id="@+id/etNewStep"
-        android:layout_width="207dp"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/recipeSteps"
-        android:layout_alignTop="@+id/btnAddStep"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginTop="0dp"
-        android:layout_marginEnd="3dp"
-        android:layout_marginRight="3dp"
-        android:layout_toStartOf="@+id/btnAddStep"
-        android:layout_toLeftOf="@+id/btnAddStep"
-        android:hint="Enter a recipe step" />
+        android:background="?attr/colorPrimary"
+        android:theme="@style/AppTheme"
+        app:popupTheme="@style/Theme.AppCompat.Light.DarkActionBar"
+        app:title="@string/app_name"
+        app:titleMarginStart="24dp"
+        app:titleTextColor="@android:color/white" />
 
-    <Button
-        android:id="@+id/btnAddStep"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:id="@+id/filter_bar_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="60dp"
-        android:layout_marginRight="60dp"
-        android:layout_marginBottom="0dp"
-        android:onClick="onAddItem"
-        android:text="Add Step" />
+        android:layout_below="@+id/toolbar"
+        android:background="?attr/colorPrimary"
+        android:paddingLeft="10dp"
+        android:paddingTop="10dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp">
 
-    <ImageView
-        android:id="@+id/mic"
-        android:layout_width="54dp"
-        android:layout_height="56dp"
-        android:layout_above="@+id/btnAddStep"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginEnd="0dp"
-        android:layout_marginRight="0dp"
-        android:layout_marginBottom="-54dp"
-        app:srcCompat="@drawable/ic_mic_black_off" />
+        <androidx.cardview.widget.CardView
+            android:id="@+id/filter_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:elevation="8dp"
+            android:foreground="?attr/selectableItemBackground">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/button_filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:padding="8dp"
+                    app:srcCompat="@drawable/ic_filter_list_white_24px"
+                    app:tint="@color/grey_80" />
+
+                <LinearLayout
+                    android:id="@+id/text_current_search_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="8dp"
+                    android:layout_toRightOf="@+id/button_filter"
+                    android:orientation="vertical"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/text_current_search"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/all_recipes"
+                        android:textColor="@color/grey_80"
+                        tools:text="Search" />
+
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/button_clear_filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:padding="8dp"
+                    app:srcCompat="@drawable/ic_close_white_24px"
+                    app:tint="@color/grey_80" />
+
+            </RelativeLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </FrameLayout>
+
+    <!-- Main Recipe recycler -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_recipes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/filter_bar_container"
+        android:background="@android:color/white"
+        tools:listitem="@layout/item_recipe" />
 
 </RelativeLayout>

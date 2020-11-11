@@ -4,32 +4,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".RecipeActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/Theme.MyApplication.AppBarOverlay">
+        android:layout_height="match_parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/Theme.MyApplication.AppBarOverlay">
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <ImageView
+            android:id="@+id/recipe_image"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:alpha="1.0"
+            android:scaleType="centerCrop"
+            android:src="@drawable/food_1" />
 
         <TextView
-            android:id="@+id/title"
+            android:id="@+id/recipe_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignTop="@id/recipe_image"
             android:gravity="center"
             android:minHeight="?actionBarSize"
             android:padding="@dimen/appbar_padding"
-            android:text="@string/recipe"
-            android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title" />
+            android:text="Some Recipe"
+            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
+            android:textColor="@color/white"/>
+
+        <TextView
+            android:id="@+id/recipe_description"
+            android:layout_width="match_parent"
+            android:layout_height="141dp"
+            android:layout_below="@id/recipe_name"
+            android:background="#8888"
+            android:padding="@dimen/appbar_padding"
+            android:text="@string/recipe_desc"
+            android:textColor="@android:color/white" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary">
-
-
+            android:layout_below="@id/recipe_image"
+            android:background="@color/colorPrimaryDark">
         </com.google.android.material.tabs.TabLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+
+    </RelativeLayout>
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"

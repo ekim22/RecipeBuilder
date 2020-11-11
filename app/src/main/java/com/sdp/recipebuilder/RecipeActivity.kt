@@ -11,7 +11,7 @@ class RecipeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_recipe)
+        setContentView(R.layout.activity_recipe_detail)
 
         val addBtn = findViewById<View>(R.id.fabAdd)
         val micBtn = findViewById<View>(R.id.fabMic)
