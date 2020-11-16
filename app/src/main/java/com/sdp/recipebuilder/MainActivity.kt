@@ -1,14 +1,17 @@
 package com.sdp.recipebuilder
 
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
@@ -21,21 +24,26 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.AdapterView.OnItemLongClickListener
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
+import com.sdp.recipebuilder.adapter.RecipeAdapter
+import com.sdp.recipebuilder.adapter.RecipeAdapter.OnRecipeSelectedListener
 import com.sdp.recipebuilder.model.Recipe
 import com.sdp.recipebuilder.model.Step
 import com.sdp.recipebuilder.util.RecipeUtil
 import java.util.*
 
-
-class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.AuthStateListener,
+        OnRecipeSelectedListener {
     private var TAG = MainActivity::class.qualifiedName
-    private var db: FirebaseFirestore? = null
 //    private var docRef: DocumentReference = db?.collection("MyRecipes")!!.document()
     private var speechRecognizer: SpeechRecognizer? = null
     private var editText: EditText? = null
@@ -43,83 +51,98 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     private var items: ArrayList<Step>? = null
     private var itemsAdapter: ArrayAdapter<Step>? = null
     private var recipeList: ListView? = null
+    private var recipeRecycler: RecyclerView? = null
+    private var toolbar: Toolbar? = null
 
-    private var myRecipeList: RecyclerView? = null
+    private lateinit var db: FirebaseFirestore
+    private lateinit var mQuery: Query
+    private lateinit var recipes: ArrayList<Recipe>
+    private lateinit var mAdapter: RecipeAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_recipe_detail_original)
+        setContentView(R.layout.activity_main)
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
 
-//        myRecipeList = findViewById<View>(R.id.recipeRecyclerView) as RecyclerView
+        recipeRecycler = findViewById(R.id.recycler_recipes)
 
-        recipeList = findViewById<View>(R.id.recipeSteps) as ListView
-        items = ArrayList()
-        itemsAdapter = ArrayAdapter(this,
-                android.R.layout.simple_list_item_1, items!!)
-        recipeList!!.adapter = itemsAdapter
+
+//        recipeList = findViewById<View>(R.id.recipeSteps) as ListView
+//        items = ArrayList()
+//        itemsAdapter = ArrayAdapter(this,
+//                android.R.layout.simple_list_item_1, items!!)
+//        recipeList!!.adapter = itemsAdapter
 
         // Enable Firestore logging
 //        FirebaseFirestore.setLoggingEnabled(true)
 
-        initFirestore()
-//        writeToDb()
-        readFromDb()
+        val addBtn = findViewById<View>(R.id.fabAdd)
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            checkPermission()
+        addBtn.setOnClickListener {
+            db.collection("recipes")
+                    .add(RecipeUtil.getTemplateRecipe())
         }
-        editText = findViewById(R.id.etNewStep)
-        micButton = findViewById(R.id.mic)
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
 
-        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-
-        speechRecognizer!!.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(bundle: Bundle) {}
-            override fun onBeginningOfSpeech() {
-                editText!!.setText("")
-                editText!!.setHint("Listening...")
+        val touchHelperCallback: ItemTouchHelper.SimpleCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            private val icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_baseline_delete_outline_24)
+            private val background = ColorDrawable(Color.RED)
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                return false
             }
 
-            override fun onRmsChanged(v: Float) {}
-            override fun onBufferReceived(bytes: ByteArray) {}
-            override fun onEndOfSpeech() {
-                editText!!.setHint("Enter a recipe step.")
-                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+//                Log.d(TAG, "onSwiped: " + mAdapter.getSnapshot(viewHolder.adapterPosition).data)
+                val recipeViewHolder = viewHolder as RecipeAdapter.RecipeViewHolder
+                recipeViewHolder.deleteRecipe()
             }
 
-            override fun onError(i: Int) {
-                editText!!.setError("Error: $i")
-//                editText!!.setText("ERROR CODE: " + i)
-                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
-            }
+            override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                val itemView = viewHolder.itemView
+                val iconMargin = (itemView.height - icon!!.intrinsicHeight) / 2
+                val iconTop = itemView.top + (itemView.height - icon.intrinsicHeight) / 2
+                val iconBottom = iconTop + icon.intrinsicHeight
+                val backgroundCornerOffset = 20
+                when {
+                    dX > 0 -> {
+                        val iconLeft = itemView.left + iconMargin + icon.intrinsicWidth
+                        val iconRight = itemView.left + iconMargin
+                        icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
 
-            override fun onResults(bundle: Bundle) {
-                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
-                val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                Log.d(TAG, data.toString())
-                editText!!.setText(data!![0])
-                val myView = findViewById<View>(R.id.btnAddStep)
-                myView.performClick()
-            }
+                        background.setBounds(itemView.left, itemView.top, itemView.left + dX.toInt() + backgroundCornerOffset, itemView.bottom)
+                    }
+                    dX < 0 -> {
+                        val iconLeft = itemView.right - iconMargin - icon.intrinsicWidth
+                        val iconRight = itemView.right - iconMargin
+                        icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
 
-            override fun onPartialResults(bundle: Bundle) {
-                editText!!.setHint("PARTIAL RESULTS")
-                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
+                        background.setBounds(itemView.right + dX.toInt() + backgroundCornerOffset, itemView.top, itemView.right, itemView.bottom)
+                    }
+                    else -> {
+                        background.setBounds(0, 0, 0, 0)
+                    }
+                }
+                background.draw(c)
+                icon.draw(c)
             }
+        }
+        val itemTouchHelper = ItemTouchHelper(touchHelperCallback)
+        itemTouchHelper.attachToRecyclerView(recipeRecycler)
 
-            override fun onEvent(i: Int, bundle: Bundle) {}
-        })
-        setupMicListener(speechRecognizerIntent)
-        setupListViewListener()
+        initFirestore()
+        initRecyclerView()
         setupFireStoreListener()
-        this.intent?.handleIntent()
     }
 
     private fun initFirestore() {
         db = FirebaseFirestore.getInstance()
+
+        mQuery = db
+                .collection("recipes")
+                .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser?.uid)
+                .orderBy("title", Query.Direction.ASCENDING)
+                .limit(LIMIT.toLong())
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -169,7 +192,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        speechRecognizer!!.destroy()
+//        speechRecognizer!!.destroy()
     }
 
     private fun checkPermission() {
@@ -189,6 +212,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         val RC_SIGN_IN = 1001
         const val RecordAudioRequestCode = 1
         var stepCounter = 1
+        private const val LIMIT = 50
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -231,7 +255,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     private fun readFromDb() {
-        db!!.collection("recipes")
+        db.collection("recipes")
                 .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
                 .get()
                 .addOnSuccessListener { documents ->
@@ -243,7 +267,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     private fun setupFireStoreListener() {
-        db!!.collection("recipes")
+        db.collection("recipes")
                 .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
                 .addSnapshotListener { snapshot, e ->
                     if (e != null) {
@@ -255,13 +279,18 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                         var snapshotList = snapshot.documentChanges
                         for (snapshot in snapshotList) {
                             when (snapshot.type) {
-                                DocumentChange.Type.ADDED -> Log.d(TAG, "Created: " + snapshot.document.toObject(Recipe::class.java).toString())
-                                DocumentChange.Type.MODIFIED -> Log.d(TAG, "Modified: " + snapshot.document.toObject(Recipe::class.java).toString())
-                                DocumentChange.Type.REMOVED -> Log.d(TAG, "Removed: " + snapshot.document.toObject(Recipe::class.java).toString())
+                                DocumentChange.Type.ADDED -> {
+                                    Log.d(TAG, "Created: " + snapshot.document.toObject(Recipe::class.java).toString())
+                                }
+                                DocumentChange.Type.MODIFIED -> {
+                                    Log.d(TAG, "Modified: " + snapshot.document.toObject(Recipe::class.java).toString())
+                                }
+                                DocumentChange.Type.REMOVED -> {
+                                    Log.d(TAG, "Removed: " + snapshot.document.toObject(Recipe::class.java).toString())
+                                }
                             }
-                            Log.d(TAG, "Snapshot doc: $snapshot")
                         }
-                        itemsAdapter!!.notifyDataSetChanged()
+                        mAdapter.notifyDataSetChanged()
                     } else {
                         Log.d(TAG, "Current data: null")
                     }
@@ -274,7 +303,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                 "uid" to FirebaseAuth.getInstance().currentUser!!.uid
         )
 
-        db?.collection("recipes")!!.document()
+        db.collection("recipes")!!.document()
                 .set(step, SetOptions.merge())
                 .addOnSuccessListener { Log.d("ADD", "Step successfully written to Firestore") }
                 .addOnFailureListener { e -> Log.w("ADD", "Error writing recipe step", e) }
@@ -292,29 +321,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                 .addOnFailureListener { e -> Log.w("DEL", "Error deleting recipe step", e) }
     }
 
-    private fun writeToDb() {
-        var recipes: CollectionReference = db?.collection("recipes")!!
-
-        val steps = hashMapOf(
-                "1" to "In a small bowl, combine the sugars, flour and spices; set aside.",
-                "2" to "In a large bowl, toss apples with lemon juice. Add sugar mixture; toss to coat.",
-                "3" to "Line a 9-in. pie plate with bottom crust; trim even with edge.",
-                "4" to "Fill with apple mixture; dot with butter.",
-                "5" to "Roll remaining crust to fit top of pie; place over filling. Trim, seal and flute edges. Cut slits in crust.",
-                "6" to "Beat egg white until foamy; brush over crust. Sprinkle with sugar. Cover edges loosely with foil.",
-                "7" to "Bake at 375° for 25 minutes. Remove foil and bake until crust is golden brown and filling is bubbly, 20-25 minutes longer. Cool on a wire rack.",
-        )
-        val ingredients = arrayListOf(
-                "sugar", "apples", "milk", "flour", "water", "cinnamon"
-        )
-
-        val newRecipe = Recipe(FirebaseAuth.getInstance().currentUser!!.uid, "ApplePie", steps, ingredients,
-                "An apple pie is a pie in which the principal filling ingredient is apple," +
-                        " originated in England. It is often served with whipped cream, ice cream, or cheddar cheese.")
-
-
-        recipes.add(newRecipe)
-    }
 
     // The two methods below add three-dot menu
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -328,7 +334,8 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                 AuthUI.getInstance().signOut(this)
             }
             R.id.action_profile -> {
-                // TODO: Tie to profile page
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
             }
             R.id.action_add_random_recipes -> {
                 onAddRecipesClicked()
@@ -340,11 +347,13 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     override fun onStart() {
         super.onStart()
         FirebaseAuth.getInstance().addAuthStateListener(this)
+        mAdapter.startListening()
     }
 
     override fun onStop() {
         super.onStop()
         FirebaseAuth.getInstance().removeAuthStateListener(this)
+        mAdapter.stopListening()
     }
 
     private fun shouldStartSignIn(): Boolean {
@@ -359,11 +368,10 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     private fun onAddRecipesClicked() {
-        val recipes = db!!.collection("recipes")
+        val recipes = db.collection("recipes")
 
-        for (x in 0..3) {
-            val recipe = RecipeUtil.getRandom(this)
-            recipes.add(recipe)
+        for (x in 0..2) {
+            RecipeUtil.getRandomMealDb(this, recipes)
         }
     }
 
@@ -372,12 +380,65 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         if (shouldStartSignIn()) {
             startSignIn()
             return
-        } else {
-            FirebaseAuth.getInstance().currentUser!!.getIdToken(true)
-                    .addOnSuccessListener { getTokenResult ->
-                        Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
-                    }
         }
+//        else {
+//            FirebaseAuth.getInstance().currentUser!!.getIdToken(true)
+//                    .addOnSuccessListener { getTokenResult ->
+//                        Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
+//                    }
+//        }
+    }
+
+    private fun initRecyclerView() {
+        mAdapter = object : RecipeAdapter(mQuery, this@MainActivity) {
+            override fun onDataChanged() {
+                if (itemCount == 0) {
+                    recipeRecycler?.visibility = View.GONE
+                } else {
+                    recipeRecycler?.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onError(e: FirebaseFirestoreException?) {
+                // Show a snackbar on errors
+                Snackbar.make(findViewById(android.R.id.content),
+                        "Error: check logs for info.", Snackbar.LENGTH_LONG).show()
+            }
+
+        }
+        recipeRecycler?.layoutManager = LinearLayoutManager(this)
+        recipeRecycler?.adapter = mAdapter
+    }
+
+    override fun onRecipeSelected(recipe: DocumentSnapshot?) {
+        val intent = Intent(this, RecipeDetailActivity::class.java)
+        intent.putExtra(RecipeDetailActivity.KEY_RECIPE_ID, recipe?.id)
+        startActivity(intent)
+    }
+
+    override fun handleDeleteRecipe(documentSnapshot: DocumentSnapshot?) {
+        val recipe = documentSnapshot?.toObject(Recipe::class.java)
+
+        documentSnapshot!!.reference.delete()
+                .addOnSuccessListener {
+                    Log.d(TAG, "handleDeleteRecipe: Item deleted")
+                }
+
+        recipeRecycler?.let {
+            Snackbar.make(it, "Recipe deleted", Snackbar.LENGTH_LONG)
+                    .setAction("Undo") {
+                        if (recipe != null) {
+                            documentSnapshot.reference.set(recipe)
+                        }
+                    }.show()
+        }
+
+    }
+
+    override fun handleEditRecipe(recipe: DocumentSnapshot?) {}
+
+    override fun onClick(p0: View?) {
+        Toast.makeText(this, "On click", Toast.LENGTH_SHORT).show()
     }
 
 }

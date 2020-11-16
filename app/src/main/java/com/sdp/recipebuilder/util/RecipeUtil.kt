@@ -1,19 +1,29 @@
 package com.sdp.recipebuilder.util
 
 import android.content.Context
+import android.util.Log
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.sdp.recipebuilder.R
 import com.sdp.recipebuilder.model.Recipe
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
+
 /**
  * Utilities for Recipes.
  */
-object RecipeUtil {
+object RecipeUtil : VolleyCallback {
     private const val TAG = "RecipeUtil"
+    private const val url = "https://www.themealdb.com/api/json/v1/1/random.php"
+
     private val EXECUTOR = ThreadPoolExecutor(2, 4, 60,
             TimeUnit.SECONDS, LinkedBlockingQueue())
     private val NAME_FIRST_WORDS = arrayOf(
@@ -28,6 +38,41 @@ object RecipeUtil {
             "Muffins",
             "Juice",
             "Cider")
+
+    /**
+     * Create a standard Recipe POJO
+     */
+    fun getTemplateRecipe(): Recipe {
+        val recipe = Recipe()
+
+        recipe.userId = FirebaseAuth.getInstance().currentUser!!.uid
+        recipe.title = "New recipe"
+        recipe.steps = hashMapOf()
+        recipe.ingredients = arrayListOf()
+        recipe.description = "New recipe description"
+
+        return recipe
+    }
+
+    /**
+     * Create a random Recipe POJO using mealDb
+     */
+    fun getRandomMealDb(context: Context, recipes: CollectionReference) {
+        val recipe = Recipe()
+
+        val queue = Volley.newRequestQueue(context)
+
+        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+                { response ->
+                    onSuccess(response, recipe, recipes)
+                },
+                { error ->
+                    Log.e(TAG, "getRandom: ", error)
+                }
+        )
+        // Queue request and get response
+        queue.add(jsonObjectRequest)
+    }
 
     /**
      * Create a random Recipe POJO.
@@ -77,4 +122,33 @@ object RecipeUtil {
         }
         return ingredients
     }
+
+    override fun onSuccess(result: JSONObject, recipe: Recipe, recipes: CollectionReference) {
+        val meals = result.get("meals") as JSONArray
+        val mealsArray = meals.getJSONObject(0)
+        recipe.userId = FirebaseAuth.getInstance().currentUser!!.uid
+        recipe.title = mealsArray.getString("strMeal")
+        recipe.description = mealsArray.getString("strCategory")
+        recipe.pic = mealsArray.getString("strMealThumb")
+        val instructions = mealsArray.getString("strInstructions").split("(\\r\\n)+".toRegex())
+        for (x in 0..instructions.size.minus(1)) {
+            recipe.steps[x.toString()] = instructions[x]
+        }
+        Log.d(TAG, "onSuccess: " + recipe.steps)
+        for (x in 1..20) {
+            if (mealsArray.getString("strIngredient$x") != ""
+                    && mealsArray.getString("strIngredient$x") != "null") {
+                recipe.ingredients.add(mealsArray.getString("strIngredient$x"))
+            } else {
+                break
+            }
+        }
+        Log.d(TAG, "onSuccess: ingreds: " + recipe.ingredients)
+        recipes.add(recipe)
+    }
+
+}
+
+interface VolleyCallback {
+    fun onSuccess(result: JSONObject, recipe: Recipe, recipes: CollectionReference)
 }

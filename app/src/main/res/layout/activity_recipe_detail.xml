@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RecipeActivity">
+    tools:context=".RecipeDetailActivity">
 
 
     <RelativeLayout
@@ -19,14 +19,16 @@
 
         <ImageView
             android:id="@+id/recipe_image"
+            android:tag="recipe_image"
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:alpha="1.0"
             android:scaleType="centerCrop"
-            android:src="@drawable/food_1" />
+            android:src="@drawable/default_recipe_background" />
 
         <TextView
             android:id="@+id/recipe_name"
+            android:tag="recipe_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignTop="@id/recipe_image"
@@ -36,16 +38,20 @@
             android:text="Some Recipe"
             android:textStyle="bold"
             android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
-            android:textColor="@color/white"/>
+            android:textColor="@color/white"
+            android:clickable="true"
+            />
 
         <TextView
             android:id="@+id/recipe_description"
+            android:tag="recipe_desc"
             android:layout_width="match_parent"
             android:layout_height="141dp"
             android:layout_below="@id/recipe_name"
             android:background="#8888"
             android:padding="@dimen/appbar_padding"
             android:text="@string/recipe_desc"
+            android:scrollbars="vertical"
             android:textColor="@android:color/white" />
 
         <com.google.android.material.tabs.TabLayout
@@ -53,22 +59,25 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/recipe_image"
-            android:background="@color/colorPrimaryDark">
+            android:background="@color/colorPrimaryDark"
+            app:tabIndicatorColor="@color/white">
         </com.google.android.material.tabs.TabLayout>
 
-    </RelativeLayout>
-
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/view_pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <androidx.recyclerview.widget.RecyclerView
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/recipeRecyclerView"/>
-    </androidx.viewpager.widget.ViewPager>
+            android:layout_below="@id/tabs"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/recipeRecyclerView"/>
+        </androidx.viewpager.widget.ViewPager>
+    </RelativeLayout>
+
+
 
     <LinearLayout
         android:gravity="center_horizontal"

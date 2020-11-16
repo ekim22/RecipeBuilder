@@ -59,13 +59,13 @@ abstract class FirestoreAdapter<VH : RecyclerView.ViewHolder?>(private var mQuer
         notifyItemRemoved(change.oldIndex)
     }
 
-    private fun startListening() {
+    fun startListening() {
         if (mRegistration == null) {
             mRegistration = mQuery.addSnapshotListener(this)
         }
     }
 
-    private fun stopListening() {
+    fun stopListening() {
         if (mRegistration != null) {
             mRegistration!!.remove()
             mRegistration = null
@@ -98,8 +98,8 @@ abstract class FirestoreAdapter<VH : RecyclerView.ViewHolder?>(private var mQuer
         return mSnapshots[index]
     }
 
-    protected fun onError(e: FirebaseFirestoreException?) {}
-    protected fun onDataChanged() {}
+    protected open fun onError(e: FirebaseFirestoreException?) {}
+    protected open fun onDataChanged() {}
 
     companion object {
         private const val TAG = "Firestore Adapter"

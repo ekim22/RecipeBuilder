@@ -17,8 +17,9 @@
         android:theme="@style/AppTheme">
         <activity android:name=".ProfileActivity"></activity>
         <activity
-            android:name=".RecipeActivity"
-            android:theme="@style/Theme.MyApplication.NoActionBar">
+            android:name=".RecipeDetailActivity"
+            android:theme="@style/Theme.MyApplication.NoActionBar"
+            tools:targetApi="m">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
@@ -26,7 +27,8 @@
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            tools:targetApi="m">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,10 +40,25 @@
             android:name="com.google.android.actions"
             android:resource="@xml/actions" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:theme="@style/Theme.MyApplication.NoActionBar"
+            tools:targetApi="m">
             <intent-filter
-                android:autoVerify="true"
-                tools:targetApi="m">
+                android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="project.recipebuilder.com"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MainActivityDeprecated">
+            <intent-filter
+                android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />

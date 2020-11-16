@@ -13,6 +13,8 @@
     <string name="all_recipes">All recipes</string>
     <string name="recipe_desc">Sandwich usually ordered at a deli; choices include type of bread (toasted or untoasted,)
         type of meat (cold cut), type of sliced cheese, vegetable fillings (lettuce, tomato, onion, etc.), and condiments</string>
+    <string name="step_fragment">Step fragment example</string>
+    <string name="ingredient_fragment">Ingredient fragment example</string>
 
     <!-- General steps for baking a pie -->
     <string-array name="sample_recipe_steps">
@@ -33,5 +35,7 @@
         <item>Pie Crust</item>
         <item>Cinnamon</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
