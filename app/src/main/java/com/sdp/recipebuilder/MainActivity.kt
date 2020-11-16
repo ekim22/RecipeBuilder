@@ -1,16 +1,13 @@
 package com.sdp.recipebuilder
 
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -20,12 +17,9 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import android.widget.AdapterView.OnItemLongClickListener
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -44,7 +38,6 @@ import java.util.*
 class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.AuthStateListener,
         OnRecipeSelectedListener {
     private var TAG = MainActivity::class.qualifiedName
-//    private var docRef: DocumentReference = db?.collection("MyRecipes")!!.document()
     private var speechRecognizer: SpeechRecognizer? = null
     private var editText: EditText? = null
     private var micButton: ImageView? = null
@@ -67,13 +60,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.Aut
 
         recipeRecycler = findViewById(R.id.recycler_recipes)
 
-
-//        recipeList = findViewById<View>(R.id.recipeSteps) as ListView
-//        items = ArrayList()
-//        itemsAdapter = ArrayAdapter(this,
-//                android.R.layout.simple_list_item_1, items!!)
-//        recipeList!!.adapter = itemsAdapter
-
         // Enable Firestore logging
 //        FirebaseFirestore.setLoggingEnabled(true)
 
@@ -92,7 +78,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.Aut
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-//                Log.d(TAG, "onSwiped: " + mAdapter.getSnapshot(viewHolder.adapterPosition).data)
                 val recipeViewHolder = viewHolder as RecipeAdapter.RecipeViewHolder
                 recipeViewHolder.deleteRecipe()
             }
@@ -162,43 +147,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.Aut
         })
     }
 
-    private fun setupListViewListener() {
-        recipeList!!.onItemLongClickListener = OnItemLongClickListener { adapter, item, pos, id -> // Remove the item within array at position
-            val newRecipe = Step(items!![pos].id, items!![pos].step)
-            // Remove from ListView
-            items!!.removeAt(pos)
-            // Delete from Firestore
-            deleteStep(newRecipe)
-            // Refresh the adapter
-            itemsAdapter!!.notifyDataSetChanged()
-            // Return true consumes the long click event (marks it handled)
-            true
-        }
-    }
-
-    fun onAddItem(v: View?) {
-        val etNewItem = findViewById<View>(R.id.etNewStep) as EditText
-        val itemText = etNewItem.text.toString()
-        val newRecipe = Step(stepCounter.toString(), itemText)
-        stepCounter++
-        if (itemText != "") {
-            itemsAdapter!!.add(newRecipe)
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(etNewItem.windowToken, 0)
-        }
-        addStep(v, newRecipe)
-        etNewItem.setText("")
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-//        speechRecognizer!!.destroy()
-    }
-
-    private fun checkPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RecordAudioRequestCode)
-        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -254,18 +204,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.Aut
         }
     }
 
-    private fun readFromDb() {
-        db.collection("recipes")
-                .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
-                .get()
-                .addOnSuccessListener { documents ->
-                    val docs = documents.documents
-                    for (doc in docs) {
-                        Log.d(TAG, "readFromDb: " + doc.data)
-                    }
-                }
-    }
-
     private fun setupFireStoreListener() {
         db.collection("recipes")
                 .whereEqualTo("userId", FirebaseAuth.getInstance().currentUser!!.uid)
@@ -296,31 +234,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.Aut
                     }
                 }
     }
-
-    private fun addStep(v: View?, step: Step) {
-        val step = hashMapOf(
-                step.id to step.step,
-                "uid" to FirebaseAuth.getInstance().currentUser!!.uid
-        )
-
-        db.collection("recipes")!!.document()
-                .set(step, SetOptions.merge())
-                .addOnSuccessListener { Log.d("ADD", "Step successfully written to Firestore") }
-                .addOnFailureListener { e -> Log.w("ADD", "Error writing recipe step", e) }
-
-    }
-
-    private fun deleteStep(step: Step) {
-        val step = hashMapOf<String, Any>(
-                step.id to FieldValue.delete()
-        )
-
-        db?.collection("recipes")!!.document()
-                .update(step)
-                .addOnCompleteListener { Log.d("DEL", "$step step successfully deleted from Firestore") }
-                .addOnFailureListener { e -> Log.w("DEL", "Error deleting recipe step", e) }
-    }
-
 
     // The two methods below add three-dot menu
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -381,12 +294,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, FirebaseAuth.Aut
             startSignIn()
             return
         }
-//        else {
-//            FirebaseAuth.getInstance().currentUser!!.getIdToken(true)
-//                    .addOnSuccessListener { getTokenResult ->
-//                        Log.d(TAG, "onSuccess: " + getTokenResult!!.token)
-//                    }
-//        }
     }
 
     private fun initRecyclerView() {
