@@ -334,7 +334,7 @@ class RecipeDetailActivity : AppCompatActivity(), EventListener<DocumentSnapshot
 
     private fun checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), MainActivityDeprecated.RecordAudioRequestCode)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), MainActivity.RecordAudioRequestCode)
         }
     }
 
