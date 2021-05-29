@@ -1,6 +1,8 @@
 # Recipe Builder
 A mobile app for making and storing recipes as a part of ITEC 4860 - Software Development Project course. Our team decided to take the unique challenge of making two apps simultaneously. This is the mobile app that I developed. The web application sits in a private repo owned by the instructor. Originally they had a single Firebase backend servicing things, but it has since been turned off.
 
+The application is able to take down steps for a recipe using Android's speechRecognizer api. Additionally, it makes use of Android's "app actions", which enables booting the app and/or starting recording activity for the app via Google Assistant, which the user can leverage to take down a recipe without physically interacting with the device. At the time of development, Android's app actions were a feature in development preview. 
+
 ## Login
 ![login](docs/imgs/rbuilder-1.png)
 
